@@ -5,15 +5,18 @@ function hello() {
 }
 
 function writeToFile() {
+
     file_name="definitions.txt"
     num_lines=$(wc -l < $file_name)
     add_sn=$((num_lines + 1))
     prefix="$add_sn".
     line="${user_input[*]}"
     echo "$line" >> "$file_name"
+    
 }
 
 function addDefinition() {
+
     rn='^[+-]?[0-9]+\.?[0-9]*$'
     rs='[a-z]+_to_[a-z]+'
     float='^[0-9]+$'
@@ -38,21 +41,27 @@ function addDefinition() {
 }
 
 
+function print() {
+
+    mapfile -t myArray < $file_name
+    var=1
+    
+    while IFS= read -r line; 
+    do  
+        echo "$var. ${line}"
+        var=$((var + 1))
+    done < $file_name
+}
 
 
 function deleteDefinition() {
+
     file_name="definitions.txt"
     
     if [ -s $file_name ]; then 
     
         echo "Type the line number to delete or '0' to return"
-        mapfile -t myArray < $file_name
-        var=1
-        while IFS= read -r line; 
-        do  
-            echo "$var. ${line}"
-            var=$((var + 1))
-        done < $file_name
+        print
 
         num_lines=$(wc -l < $file_name)
         
@@ -62,8 +71,8 @@ function deleteDefinition() {
         
             echo "Enter a valid line number!"
             read line_number
-               
-        done 
+              
+        done
         
         if [ $line_number -eq 0 ]; then 
             return
@@ -75,6 +84,54 @@ function deleteDefinition() {
         echo "Please add a definition first!"
     fi    
    
+    
+}
+
+function convertUtils() {
+
+    file_name="definitions.txt"
+    
+    if [ -s $file_name ]; then 
+        echo "Type the line number to convert units or '0' to return"
+        print
+        
+        num_lines=$(wc -l < $file_name)
+        
+        read line_number
+        
+        while [[ $line_number -gt $num_lines ]]  || [ -z $line_number ] || [[ "$line_number" == "" ]]; do
+        
+            echo "Enter a valid line number!"
+            read line_number
+           
+        done
+        
+        if [ $line_number -eq 0 ]; then 
+            return
+        else 
+            echo "Enter a value to convert:"
+            read value
+        
+                while [[ ! $value =~ $float ]] && [[ ! $value =~ $int ]]
+                do
+                    echo "Enter a float or integer value!"
+                read value
+                done
+            
+            
+            line=$(sed "${line_number}!d" "$file_name")
+            read -a text <<< "$line"
+        
+            number="${text[1]}"
+            result=$(bc -l <<<$number*$value)
+            echo "Result: $result"
+               
+        fi
+    
+    else 
+        echo "Please add a definition first!"
+    fi    
+    
     
 }
 
@@ -96,7 +153,7 @@ function menu() {
                 exit
                 ;;
             1)     
-                echo "Not implemented!" 
+                convertUtils
                 ;;
             2)  
                 addDefinition
